@@ -5,15 +5,32 @@ import (
 	"net/http"
 )
 
-// Temporary home handler
-func home(w http.ResponseWriter, e *http.Request) {
+// Home handler. Since `/` is a catch all handler, any other unmapped route will
+// result in 404
+func home(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
 	w.Write([]byte("Hello from snippetbox!"))
+}
+
+// Display a single snippet handler
+func snippetView(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Display a specific snippet."))
+}
+
+// Create a snippet handler
+func snippetCreate(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Create a new snippet."))
 }
 
 func main() {
 	mux := http.NewServeMux()
-	// `/` is a catch-all URL pattern, so all requests will be routed to it
 	mux.HandleFunc("/", home)
+	mux.HandleFunc("/snippet/view", snippetView)
+	mux.HandleFunc("/snippet/create", snippetCreate)
 
 	log.Print("Starting server on :4000")
 	err := http.ListenAndServe(":4000", mux)
