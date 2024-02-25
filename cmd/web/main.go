@@ -1,15 +1,32 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"path/filepath"
 )
 
+type appConfig struct {
+	addr             string
+	staticAssertsDir string
+}
+
 func main() {
+	var appCfg appConfig
+
+	flag.StringVar(&appCfg.addr, "addr", ":4000", "HTTP network address")
+	flag.StringVar(
+		&appCfg.staticAssertsDir,
+		"static-dir",
+		"./ui/static/",
+		"Path to static assets",
+	)
+	flag.Parse()
+
 	mux := http.NewServeMux()
 
-	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
+	fileServer := http.FileServer(neuteredFileSystem{http.Dir(appCfg.staticAssertsDir)})
 
 	mux.Handle("/static", http.NotFoundHandler())
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
@@ -18,8 +35,8 @@ func main() {
 	mux.HandleFunc("/snippet/view", snippetView)
 	mux.HandleFunc("/snippet/create", snippetCreate)
 
-	log.Print("Starting server on :4000")
-	err := http.ListenAndServe(":4000", mux)
+	log.Printf("Starting server on %s", appCfg.addr)
+	err := http.ListenAndServe(appCfg.addr, mux)
 	log.Fatal(err)
 }
 
