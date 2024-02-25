@@ -14,8 +14,9 @@ type appConfig struct {
 }
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
+	errorLog  *log.Logger
+	infoLog   *log.Logger
+	appConfig *appConfig
 }
 
 func main() {
@@ -33,27 +34,16 @@ func main() {
 
 	// Application instance
 	app := &application{
-		errorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
-		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		errorLog:  log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		infoLog:   log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		appConfig: &appCfg,
 	}
-
-	// Route handler
-	mux := http.NewServeMux()
-
-	fileServer := http.FileServer(neuteredFileSystem{http.Dir(appCfg.staticAssertsDir)})
-
-	mux.Handle("/static", http.NotFoundHandler())
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	// Web Server
 	server := &http.Server{
 		Addr:     appCfg.addr,
 		ErrorLog: app.errorLog,
-		Handler:  mux,
+		Handler:  app.routes(),
 	}
 
 	app.infoLog.Printf("Starting server on %s", appCfg.addr)
