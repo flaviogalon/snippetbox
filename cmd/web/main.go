@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -13,6 +14,7 @@ type appConfig struct {
 }
 
 func main() {
+	// Application configuration
 	var appCfg appConfig
 
 	flag.StringVar(&appCfg.addr, "addr", ":4000", "HTTP network address")
@@ -24,6 +26,11 @@ func main() {
 	)
 	flag.Parse()
 
+	// Custom logging
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// Route handler
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir(appCfg.staticAssertsDir)})
@@ -35,9 +42,16 @@ func main() {
 	mux.HandleFunc("/snippet/view", snippetView)
 	mux.HandleFunc("/snippet/create", snippetCreate)
 
-	log.Printf("Starting server on %s", appCfg.addr)
-	err := http.ListenAndServe(appCfg.addr, mux)
-	log.Fatal(err)
+	// Web Server
+	server := &http.Server{
+		Addr:     appCfg.addr,
+		ErrorLog: errorLog,
+		Handler:  mux,
+	}
+
+	infoLog.Printf("Starting server on %s", appCfg.addr)
+	err := server.ListenAndServe()
+	errorLog.Fatal(err)
 }
 
 type neuteredFileSystem struct {
