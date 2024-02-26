@@ -1,12 +1,16 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"snippetbox.flaviogalon.github.io/internal/utils"
+)
 
 func (app *application) routes() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(
-		neuteredFileSystem{http.Dir(app.appConfig.staticAssertsDir)},
+		utils.NeuteredFileSystem{Fs: http.Dir(app.appConfig.staticAssertsDir)},
 	)
 
 	mux.Handle("/static", http.NotFoundHandler())
