@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"snippetbox.flaviogalon.github.io/internal/models"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
@@ -19,9 +21,10 @@ type appConfig struct {
 }
 
 type application struct {
-	errorLog  *log.Logger
-	infoLog   *log.Logger
-	appConfig *appConfig
+	errorLog     *log.Logger
+	infoLog      *log.Logger
+	appConfig    *appConfig
+	snippetModel *models.SnippetModel
 }
 
 func main() {
@@ -63,9 +66,10 @@ func main() {
 
 	// Application instance
 	app := &application{
-		errorLog:  errorLog,
-		infoLog:   infoLog,
-		appConfig: &appCfg,
+		errorLog:     errorLog,
+		infoLog:      infoLog,
+		appConfig:    &appCfg,
+		snippetModel: &models.SnippetModel{DB: db},
 	}
 
 	// Web Server
