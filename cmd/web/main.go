@@ -1,11 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 )
 
 type appConfig struct {
@@ -20,6 +25,18 @@ type application struct {
 }
 
 func main() {
+	// Custom log
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+
+	// Loading env variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		errorLog.Fatal("Error loading .env file")
+	}
+	dbUser := os.Getenv("MYSQL_USER")
+	dbPwd := os.Getenv("MYSQL_PASSWORD")
+
 	// Application configuration
 	var appCfg appConfig
 
@@ -30,12 +47,24 @@ func main() {
 		"./ui/static/",
 		"Path to static assets",
 	)
+	dsn := flag.String(
+		"dsn",
+		fmt.Sprintf("%s:%s@/snippetbox?parseTime=true", dbUser, dbPwd),
+		"MySQL data source name",
+	)
 	flag.Parse()
+
+	// Database pool
+	db, err := openDB(*dsn)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	defer db.Close()
 
 	// Application instance
 	app := &application{
-		errorLog:  log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
-		infoLog:   log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		errorLog:  errorLog,
+		infoLog:   infoLog,
 		appConfig: &appCfg,
 	}
 
@@ -47,8 +76,19 @@ func main() {
 	}
 
 	app.infoLog.Printf("Starting server on %s", appCfg.addr)
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	app.errorLog.Fatal(err)
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 type neuteredFileSystem struct {
