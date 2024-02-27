@@ -68,5 +68,43 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 
 // Return the 10 most recent snippets
 func (m *SnippetModel) Latest() ([]*Snippet, error) {
-	return nil, nil
+	sqlQuery := `SELECT id, title, content, created, expires FROM snippets
+	WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
+
+	rows, err := m.DB.Query(sqlQuery)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+
+	// Guaranteeing that the DB connection will be freed when `Latest()` finishes
+	defer rows.Close()
+
+	snippets := []*Snippet{}
+
+	for rows.Next() {
+		snippet := &Snippet{}
+		err = rows.Scan(
+			&snippet.ID,
+			&snippet.Title,
+			&snippet.Content,
+			&snippet.Created,
+			&snippet.Expires,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		snippets = append(snippets, snippet)
+	}
+
+	// We can't assume the iteration was successful just because it ended
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return snippets, nil
 }
