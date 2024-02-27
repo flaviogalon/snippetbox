@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"snippetbox.flaviogalon.github.io/internal/models"
 )
 
 // Home handler. Since `/` is a catch all handler, any other unmapped route will
@@ -44,7 +47,18 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Display a specific snippet with ID %d", id)
+	snippet, err := app.snippetModel.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	// Plain-text HTTP response body.
+	fmt.Fprintf(w, "%+v", snippet)
 }
 
 // Create a snippet handler
