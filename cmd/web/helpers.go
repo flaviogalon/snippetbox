@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"runtime/debug"
@@ -41,10 +42,16 @@ func (app *application) render(
 		return
 	}
 
-	w.WriteHeader(statusCode)
+	// Using a buffer to prevent runtime template errors from leaking to the user
+	buffer := new(bytes.Buffer)
 
-	err := ts.ExecuteTemplate(w, "base", data)
+	err := ts.ExecuteTemplate(buffer, "base", data)
 	if err != nil {
 		app.serverError(w, err)
+		return
 	}
+
+	w.WriteHeader(statusCode)
+
+	buffer.WriteTo(w)
 }
