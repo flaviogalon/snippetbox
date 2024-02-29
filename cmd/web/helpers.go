@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 // Write an error message and stack trace to custom error logger then sends
@@ -54,4 +55,10 @@ func (app *application) render(
 	w.WriteHeader(statusCode)
 
 	buffer.WriteTo(w)
+}
+
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		CurrentYear: time.Now().Year(),
+	}
 }
