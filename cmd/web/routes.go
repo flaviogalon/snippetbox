@@ -6,7 +6,7 @@ import (
 	"snippetbox.flaviogalon.github.io/internal/utils"
 )
 
-func (app *application) routes() *http.ServeMux {
+func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(
@@ -20,5 +20,6 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("/snippet/view", app.snippetView)
 	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
-	return mux
+	// Middleware chain: logRequests -> secureHeaders -> ServeMux
+	return app.logRequests(secureHeaders(mux))
 }
