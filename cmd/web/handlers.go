@@ -7,17 +7,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/julienschmidt/httprouter"
 	"snippetbox.flaviogalon.github.io/internal/models"
 )
 
-// Home handler. Since `/` is a catch all handler, any other unmapped route will
-// result in 404
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.notFound(w)
-		return
-	}
-
 	snippets, err := app.snippetModel.Latest()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
@@ -41,7 +35,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 // Display a single snippet handler
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
 
 	if err != nil || id < 1 {
 		app.notFound(w)
@@ -69,15 +65,12 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-// Create a snippet handler
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		// Order here matters
-		w.Header().Set("Allow", http.MethodPost)
-		app.clientError(w, http.StatusMethodNotAllowed)
-		return
-	}
+	w.Write([]byte("Display the form for creating a new snippet..."))
+}
 
+// Create a snippet handler
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	// Some dummy data for now
 	title := "O snail"
 	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n- Kobayashi Issa"
@@ -89,5 +82,5 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
