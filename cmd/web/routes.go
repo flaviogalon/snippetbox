@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/justinas/alice"
 	"snippetbox.flaviogalon.github.io/internal/utils"
 )
 
@@ -20,6 +21,11 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("/snippet/view", app.snippetView)
 	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
-	// Middleware chain: logRequests -> secureHeaders -> ServeMux
-	return app.recoverPanic(app.logRequests(secureHeaders(mux)))
+	standardMiddleware := alice.New(
+		app.recoverPanic,
+		app.logRequests,
+		secureHeaders,
+	)
+
+	return standardMiddleware.Then(mux)
 }
