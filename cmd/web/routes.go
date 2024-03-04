@@ -21,5 +21,5 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	// Middleware chain: logRequests -> secureHeaders -> ServeMux
-	return app.logRequests(secureHeaders(mux))
+	return app.recoverPanic(app.logRequests(secureHeaders(mux)))
 }
