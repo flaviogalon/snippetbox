@@ -13,10 +13,10 @@ import (
 )
 
 type snippetCreateForm struct {
-	Title   string
-	Content string
-	Expires int
-	validator.Validator
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form: "-"`
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -83,49 +83,47 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
 // Create a snippet handler
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	var form snippetCreateForm
+
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
-	formData := snippetCreateForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
 	}
 
 	// Data validation
-	formData.CheckField(validator.NotBlank(formData.Title), "title", "This field can't be blank")
-	formData.CheckField(
-		validator.MaxChars(formData.Title, 100),
+	form.CheckField(
+		validator.NotBlank(form.Title),
+		"title",
+		"This field can't be blank",
+	)
+	form.CheckField(
+		validator.MaxChars(form.Title, 100),
 		"title",
 		"This field can't be more than 100 characters long",
 	)
-	formData.CheckField(validator.NotBlank(formData.Content), "content", "This field can't be blank")
-	formData.CheckField(
-		validator.PermittedInt(formData.Expires, 1, 7, 365),
+	form.CheckField(
+		validator.NotBlank(form.Content),
+		"content",
+		"This field can't be blank",
+	)
+	form.CheckField(
+		validator.PermittedInt(form.Expires, 1, 7, 365),
 		"expires",
 		"This field must be equal 1, 7 or 365",
 	)
 
-	if !formData.Valid() {
+	if !form.Valid() {
 		data := app.newTemplateData(r)
-		data.Form = formData
+		data.Form = form
 		app.render(w, http.StatusUnprocessableEntity, "create.tmpl.html", data)
 		return
 	}
 
 	id, err := app.snippetModel.Insert(
-		formData.Title,
-		formData.Content,
-		formData.Expires,
+		form.Title,
+		form.Content,
+		form.Expires,
 	)
 	if err != nil {
 		app.serverError(w, err)

@@ -11,6 +11,7 @@ import (
 
 	"snippetbox.flaviogalon.github.io/internal/models"
 
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
@@ -26,6 +27,7 @@ type application struct {
 	appConfig     *appConfig
 	snippetModel  *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 func main() {
@@ -71,6 +73,9 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	// Form Decoder
+	formDecoder := form.NewDecoder()
+
 	// Application instance
 	app := &application{
 		errorLog:      errorLog,
@@ -78,6 +83,7 @@ func main() {
 		appConfig:     &appCfg,
 		snippetModel:  &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 
 	// Web Server
