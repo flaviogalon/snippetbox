@@ -24,6 +24,7 @@ func (app *application) routes() http.Handler {
 	dynamicMid := alice.New(app.sessionManager.LoadAndSave)
 
 	router.Handler(http.MethodGet, "/", dynamicMid.ThenFunc(app.home))
+	// Snippet
 	router.Handler(
 		http.MethodGet,
 		"/snippet/view/:id",
@@ -38,6 +39,32 @@ func (app *application) routes() http.Handler {
 		http.MethodPost,
 		"/snippet/create",
 		dynamicMid.ThenFunc(app.snippetCreatePost),
+	)
+	// User
+	router.Handler(
+		http.MethodGet,
+		"/user/signup",
+		dynamicMid.ThenFunc(app.userSignup),
+	)
+	router.Handler(
+		http.MethodPost,
+		"/user/signup",
+		dynamicMid.ThenFunc(app.userSignupPost),
+	)
+	router.Handler(
+		http.MethodGet,
+		"/user/login",
+		dynamicMid.ThenFunc(app.userLogin),
+	)
+	router.Handler(
+		http.MethodPost,
+		"/user/login",
+		dynamicMid.ThenFunc(app.userLoginPost),
+	)
+	router.Handler(
+		http.MethodPost,
+		"/user/logout",
+		dynamicMid.ThenFunc(app.userLogoutPost),
 	)
 
 	standardMiddleware := alice.New(
