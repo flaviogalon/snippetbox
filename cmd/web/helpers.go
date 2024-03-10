@@ -60,9 +60,12 @@ func (app *application) render(
 	buffer.WriteTo(w)
 }
 
+// Create a new template struct and prefill it with current year and any existing
+// "flash" message to be displayed.
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		CurrentYear: time.Now().Year(),
+		Flash:       app.sessionManager.PopString(r.Context(), "flash"),
 	}
 }
 

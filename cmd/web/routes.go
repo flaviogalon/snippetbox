@@ -21,10 +21,24 @@ func (app *application) routes() http.Handler {
 		http.StripPrefix("/static", fileServer),
 	)
 
-	router.HandlerFunc(http.MethodGet, "/", app.home)
-	router.HandlerFunc(http.MethodGet, "/snippet/view/:id", app.snippetView)
-	router.HandlerFunc(http.MethodGet, "/snippet/create", app.snippetCreate)
-	router.HandlerFunc(http.MethodPost, "/snippet/create", app.snippetCreatePost)
+	dynamicMid := alice.New(app.sessionManager.LoadAndSave)
+
+	router.Handler(http.MethodGet, "/", dynamicMid.ThenFunc(app.home))
+	router.Handler(
+		http.MethodGet,
+		"/snippet/view/:id",
+		dynamicMid.ThenFunc(app.snippetView),
+	)
+	router.Handler(
+		http.MethodGet,
+		"/snippet/create",
+		dynamicMid.ThenFunc(app.snippetCreate),
+	)
+	router.Handler(
+		http.MethodPost,
+		"/snippet/create",
+		dynamicMid.ThenFunc(app.snippetCreatePost),
+	)
 
 	standardMiddleware := alice.New(
 		app.recoverPanic,
