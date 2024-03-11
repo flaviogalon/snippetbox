@@ -143,7 +143,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
+	app.sessionManager.Put(r.Context(), TOKEN_FLASH, "Snippet successfully created!")
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
@@ -212,7 +212,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
 	app.sessionManager.Put(
 		r.Context(),
-		"flash",
+		TOKEN_FLASH,
 		"Your signup was successful. Please log in.",
 	)
 
@@ -278,11 +278,21 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add the user's ID to the session
-	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+	app.sessionManager.Put(r.Context(), TOKEN_AUTHENTICATED_USER_ID, id)
 
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Logout the user")
+	// Renew the session token to invalidate the previous one
+	err := app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.sessionManager.Remove(r.Context(), TOKEN_AUTHENTICATED_USER_ID)
+	app.sessionManager.Put(r.Context(), TOKEN_FLASH, "You've been logged out mate")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
