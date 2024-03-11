@@ -21,6 +21,7 @@ func (app *application) routes() http.Handler {
 		http.StripPrefix("/static", fileServer),
 	)
 
+	// Unprotected application routes
 	dynamicMid := alice.New(app.sessionManager.LoadAndSave)
 
 	router.Handler(http.MethodGet, "/", dynamicMid.ThenFunc(app.home))
@@ -30,17 +31,6 @@ func (app *application) routes() http.Handler {
 		"/snippet/view/:id",
 		dynamicMid.ThenFunc(app.snippetView),
 	)
-	router.Handler(
-		http.MethodGet,
-		"/snippet/create",
-		dynamicMid.ThenFunc(app.snippetCreate),
-	)
-	router.Handler(
-		http.MethodPost,
-		"/snippet/create",
-		dynamicMid.ThenFunc(app.snippetCreatePost),
-	)
-	// User
 	router.Handler(
 		http.MethodGet,
 		"/user/signup",
@@ -61,10 +51,23 @@ func (app *application) routes() http.Handler {
 		"/user/login",
 		dynamicMid.ThenFunc(app.userLoginPost),
 	)
+
+	// Protected application routes
+	protected := dynamicMid.Append(app.requireAuthentication)
+	router.Handler(
+		http.MethodGet,
+		"/snippet/create",
+		protected.ThenFunc(app.snippetCreate),
+	)
+	router.Handler(
+		http.MethodPost,
+		"/snippet/create",
+		protected.ThenFunc(app.snippetCreatePost),
+	)
 	router.Handler(
 		http.MethodPost,
 		"/user/logout",
-		dynamicMid.ThenFunc(app.userLogoutPost),
+		protected.ThenFunc(app.userLogoutPost),
 	)
 
 	standardMiddleware := alice.New(

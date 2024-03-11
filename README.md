@@ -50,3 +50,7 @@ To load dummy data in the DB
 ```shell
 cat ./cmd/db/load_dummy_data.sql | docker exec -i <container_name> mysql -usnippetbox -p<pwd> snippetbox
 ```
+
+## TODO
+Features that I'd like to have but I'm not certain that are covered by the book
+- [ ] "Flash" message when redirects to login page comes from logged out users.

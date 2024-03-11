@@ -64,8 +64,9 @@ func (app *application) render(
 // "flash" message to be displayed.
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
-		CurrentYear: time.Now().Year(),
-		Flash:       app.sessionManager.PopString(r.Context(), TOKEN_FLASH),
+		CurrentYear:     time.Now().Year(),
+		Flash:           app.sessionManager.PopString(r.Context(), TOKEN_FLASH),
+		IsAuthenticated: app.isAuthenticated(r),
 	}
 }
 
@@ -85,4 +86,9 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 		return err
 	}
 	return nil
+}
+
+// Return true if an user is authenticated
+func (app *application) isAuthenticated(r *http.Request) bool {
+	return app.sessionManager.Exists(r.Context(), TOKEN_AUTHENTICATED_USER_ID)
 }
