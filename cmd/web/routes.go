@@ -22,7 +22,11 @@ func (app *application) routes() http.Handler {
 	)
 
 	// Unprotected application routes
-	dynamicMid := alice.New(app.sessionManager.LoadAndSave, noSurf)
+	dynamicMid := alice.New(
+		app.sessionManager.LoadAndSave,
+		noSurf,
+		app.authenticate,
+	)
 
 	router.Handler(http.MethodGet, "/", dynamicMid.ThenFunc(app.home))
 	// Snippet
@@ -52,7 +56,7 @@ func (app *application) routes() http.Handler {
 		dynamicMid.ThenFunc(app.userLoginPost),
 	)
 
-	// Protected application routes
+	// Protected application routes (copying all mid from unprotected)
 	protected := dynamicMid.Append(app.requireAuthentication)
 	router.Handler(
 		http.MethodGet,

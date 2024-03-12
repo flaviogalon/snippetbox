@@ -61,8 +61,7 @@ func (app *application) render(
 	buffer.WriteTo(w)
 }
 
-// Create a new template struct and prefill it with current year and any existing
-// "flash" message to be displayed.
+// Create a new template struct and prefill it with useful data
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		CurrentYear:     time.Now().Year(),
@@ -92,5 +91,10 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 
 // Return true if an user is authenticated
 func (app *application) isAuthenticated(r *http.Request) bool {
-	return app.sessionManager.Exists(r.Context(), TOKEN_AUTHENTICATED_USER_ID)
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	// Being safe an returning false in case of any errors
+	if !ok {
+		return false
+	}
+	return isAuthenticated
 }
