@@ -22,7 +22,7 @@ func (app *application) routes() http.Handler {
 	)
 
 	// Unprotected application routes
-	dynamicMid := alice.New(app.sessionManager.LoadAndSave)
+	dynamicMid := alice.New(app.sessionManager.LoadAndSave, noSurf)
 
 	router.Handler(http.MethodGet, "/", dynamicMid.ThenFunc(app.home))
 	// Snippet
