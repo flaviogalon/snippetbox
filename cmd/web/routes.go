@@ -58,6 +58,11 @@ func (app *application) routes() http.Handler {
 		"/user/login",
 		dynamicMid.ThenFunc(app.userLoginPost),
 	)
+	router.Handler(
+		http.MethodGet,
+		"/ping",
+		dynamicMid.ThenFunc(app.ping),
+	)
 
 	// Protected application routes (copying all mid from unprotected)
 	protected := dynamicMid.Append(app.requireAuthentication)
