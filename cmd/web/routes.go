@@ -5,6 +5,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
+	"snippetbox.flaviogalon.github.io/ui"
 )
 
 func (app *application) routes() http.Handler {
@@ -14,11 +15,13 @@ func (app *application) routes() http.Handler {
 		app.notFound(w)
 	})
 
-	fileServer := http.FileServer(http.Dir(app.appConfig.staticAssertsDir))
+	// Embedded File Server
+	fileServer := http.FileServer(http.FS(ui.Files))
+
 	router.Handler(
 		http.MethodGet,
 		"/static/*filepath",
-		http.StripPrefix("/static", fileServer),
+		fileServer,
 	)
 
 	// Unprotected application routes
