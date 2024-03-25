@@ -37,6 +37,11 @@ func (app *application) routes() http.Handler {
 	)
 
 	router.Handler(http.MethodGet, "/", dynamicMid.ThenFunc(app.home))
+	router.Handler(
+		http.MethodGet,
+		"/about",
+		dynamicMid.ThenFunc(app.about),
+	)
 	// Snippet
 	router.Handler(
 		http.MethodGet,
