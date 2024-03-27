@@ -23,6 +23,7 @@ import (
 type appConfig struct {
 	addr             string
 	staticAssertsDir string
+	debugMode        bool
 }
 
 type application struct {
@@ -64,7 +65,14 @@ func main() {
 		fmt.Sprintf("%s:%s@/snippetbox?parseTime=true", dbUser, dbPwd),
 		"MySQL data source name",
 	)
+	debugMode := flag.Bool(
+		"debug",
+		false,
+		"Debug Mode",
+	)
 	flag.Parse()
+
+	appCfg.debugMode = *debugMode
 
 	// Database pool
 	db, err := openDB(*dsn)
