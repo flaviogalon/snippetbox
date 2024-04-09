@@ -5,6 +5,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
+
 	"snippetbox.flaviogalon.github.io/ui"
 )
 
@@ -85,6 +86,11 @@ func (app *application) routes() http.Handler {
 		http.MethodPost,
 		"/user/logout",
 		protected.ThenFunc(app.userLogoutPost),
+	)
+	router.Handler(
+		http.MethodGet,
+		"/account/view",
+		protected.ThenFunc(app.accountView),
 	)
 
 	standardMiddleware := alice.New(

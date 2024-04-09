@@ -3,11 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-
 	"net/http"
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
+
 	"snippetbox.flaviogalon.github.io/internal/models"
 	"snippetbox.flaviogalon.github.io/internal/validator"
 )
@@ -306,6 +306,25 @@ func (app *application) about(w http.ResponseWriter, r *http.Request) {
 		"about.tmpl.html",
 		templateData,
 	)
+}
+
+func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
+	id := app.sessionManager.GetInt(r.Context(), TOKEN_AUTHENTICATED_USER_ID)
+
+	user, err := app.userModel.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	templateData := app.newTemplateData(r)
+	templateData.User = user
+
+	app.render(w, http.StatusOK, "account.tmpl.html", templateData)
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {
