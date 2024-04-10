@@ -280,6 +280,12 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	// Add the user's ID to the session
 	app.sessionManager.Put(r.Context(), TOKEN_AUTHENTICATED_USER_ID, id)
 
+	// Retrieve path that unauthenticated user was trying to access
+	urlPath := app.sessionManager.PopString(r.Context(), TOKEN_REDIRECT_PATH)
+	if urlPath != "" {
+		http.Redirect(w, r, urlPath, http.StatusSeeOther)
+		return
+	}
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
