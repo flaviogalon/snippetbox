@@ -32,6 +32,13 @@ type userLoginForm struct {
 	validator.Validator `form:"-"`
 }
 
+type accountPasswordUpdateForm struct {
+	CurrentPassword      string `form:"currentPassword"`
+	NewPassword          string `form:"newPassword"`
+	PasswordConfirmation string `form:"passwordConfirmation"`
+	validator.Validator  `form:"-"`
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.snippetModel.Latest()
 	if err != nil {
@@ -331,6 +338,21 @@ func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 	templateData.User = user
 
 	app.render(w, http.StatusOK, "account.tmpl.html", templateData)
+}
+
+func (app *application) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
+	templateData := app.newTemplateData(r)
+	templateData.Form = accountPasswordUpdateForm{}
+
+	app.render(
+		w,
+		http.StatusOK,
+		"password.tmpl.html",
+		templateData,
+	)
+}
+
+func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {
