@@ -16,27 +16,27 @@ type snippetCreateForm struct {
 	Title               string `form:"title"`
 	Content             string `form:"content"`
 	Expires             int    `form:"expires"`
-	validator.Validator `form:"-"`
+	validator.Validator `       form:"-"`
 }
 
 type userSignupForm struct {
 	Name                string `form:"name"`
 	Email               string `form:"email"`
 	Password            string `form:"password"`
-	validator.Validator `form:"-"`
+	validator.Validator `       form:"-"`
 }
 
 type userLoginForm struct {
 	Email               string `form:"email"`
 	Password            string `form:"password"`
-	validator.Validator `form:"-"`
+	validator.Validator `       form:"-"`
 }
 
 type accountPasswordUpdateForm struct {
 	CurrentPassword      string `form:"currentPassword"`
 	NewPassword          string `form:"newPassword"`
 	PasswordConfirmation string `form:"passwordConfirmation"`
-	validator.Validator  `form:"-"`
+	validator.Validator  `       form:"-"`
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -353,6 +353,46 @@ func (app *application) accountPasswordUpdate(w http.ResponseWriter, r *http.Req
 }
 
 func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
+	form := accountPasswordUpdateForm{}
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(
+		validator.NotBlank(form.CurrentPassword),
+		"currentPassword",
+		"This field can't be blank",
+	)
+	form.CheckField(
+		validator.NotBlank(form.NewPassword),
+		"newPassword",
+		"This field can't be blank",
+	)
+	form.CheckField(
+		validator.NotBlank(form.PasswordConfirmation),
+		"passwordConfirmation",
+		"This field can't be blank",
+	)
+	form.CheckField(
+		validator.MinChars(form.NewPassword, 8),
+		"newPassword",
+		"Password must contain at least 8 characters",
+	)
+	form.CheckField(
+		validator.Equals(form.NewPassword, form.PasswordConfirmation),
+		"passwordConfirmation",
+		"New password and password confirmation should match",
+	)
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "password.tmpl.html", data)
+		return
+	}
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {
